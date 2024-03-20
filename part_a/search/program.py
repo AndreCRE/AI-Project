@@ -29,9 +29,48 @@ def a_star_search(board, start, goal):
 
     return None  # No path found
 
+def check_conseq_neighbours(current, direction, board, goal):
+    conseq_empty = 0
+    while conseq_empty < 4:
+        if direction == "DOWN":
+            new_r = current.r + 1
+            if new_r == 11:
+                new_r = 0
+            new_c = current.c
+        elif direction == "UP":
+            new_r = current.r - 1
+            if new_r == -1:
+                new_r = 10
+            new_c = current.c
+        elif direction == "RIGHT":
+            new_r = current.r
+            new_c = current.c + 1
+            if new_c == 11:
+                new_c = 0
+        else:
+            new_r = current.r
+            new_c = current.c - 1
+            if new_c == -1:
+                new_c = 10
+
+        if Coord(new_r, new_c) in get_neighbors(current, board, goal):
+            conseq_empty += 1
+        else:
+            return conseq_empty
+    return conseq_empty
+
+def manhatten_dist_finder(current, goal):
+    row = abs(current.r - goal.r)
+    column = abs(current.c - goal.c)
+
+    dis_row = min(row, 11 - row)
+    dis_column = min(column, 11 - column)
+
+    return dis_row + dis_column
+
 def heuristic(board, current, goal):
     # Calculate Manhattan distance to the goal
-    manhattan_dist = abs(current.r - goal.r) + abs(current.c - goal.c)
+    manhattan_dist = manhatten_dist_finder(current, goal)
 
     # Determine if it's easier to fill the row or column of the goal block
     row_spaces = sum(1 for coord, color in board.items() if coord.r == goal.r and color == None)
@@ -49,15 +88,23 @@ def get_neighbors(coord, board, target):
     considering obstacles on the board.
     """
     neighbors = []
-    for dr, dc in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-        new_r, new_c = coord.r + dr, coord.c + dc
-        # Check if the new coordinate is within the bounds of the game board
-        if 0 <= new_r < 11 and 0 <= new_c < 11:
-            # Check if the new coordinate is not obstructed by a blue block
-            if board.get(Coord(new_r, new_c)) != PlayerColor.BLUE and board.get(Coord(new_r, new_c)) != PlayerColor.RED:
-                neighbors.append(Coord(new_r, new_c))  # Add the neighboring coordinate
-            if new_r == target.r and new_c == target.c:
-                neighbors.append(Coord(new_r, new_c))
+    for row, column in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+        new_r, new_c = coord.r + row, coord.c + column
+        # Take into account that edge pieces are connected across the board
+        if new_r == 11:
+            new_r = 0
+        elif new_r == -1:
+            new_r = 10
+        if new_c == 11:
+            new_c = 0
+        elif new_c == -1:
+            new_c = 10
+
+        # Check if the new coordinate is not obstructed by a blue block
+        if board.get(Coord(new_r, new_c)) != PlayerColor.BLUE and board.get(Coord(new_r, new_c)) != PlayerColor.RED:
+            neighbors.append(Coord(new_r, new_c))  # Add the neighboring coordinate
+        if new_r == target.r and new_c == target.c:
+            neighbors.append(Coord(new_r, new_c))
     return neighbors
 
 # Helper function to reconstruct path
