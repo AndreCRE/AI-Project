@@ -5,8 +5,6 @@ from .core import PlayerColor, Coord, PlaceAction, Shape
 from .utils import render_board
 from queue import PriorityQueue
 
-
-def create_dict(board):return True
 def find_path_to_fill_row(came_from, start, goal_row):
     # # Initialize an empty list to store the path
     path = []
@@ -32,11 +30,13 @@ def a_star_search(board, start, goal):
 
         # Check if filling the row or column of the goal
         rowOrCol,isGoal = contains_goal_row_or_column(came_from,goal,board)
-        if isGoal:
+        if isGoal and rowOrCol == 0:
             #print(came_from)
-            pathh = find_path_to_fill_row(came_from,start,goal.r)
-            path = reconstruct_path(came_from, current)
-            return pathh
+            path = find_path_to_fill_row(came_from,start,goal.r)
+            return path
+        elif isGoal and rowOrCol == 1:
+            #TODO input the find path to fill column section
+            return path
 
         for neighbor in get_neighbors(current, board):
             tentative_g_score = g_score[current] + 1
